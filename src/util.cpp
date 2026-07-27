@@ -560,9 +560,13 @@ void dataview_apply_sort(wxDataViewCtrl *ctrl, const std::string &saved)
 
     // Clear any existing sort key, then set the one we want. wx uses
     // SetSortOrder(false) to mean "descending but sorted"; a null sort
-    // (no key at all) is expressed via UnsetAsSortKey().
-    for (unsigned i = 0; i < ctrl->GetColumnCount(); i++)
-        ctrl->GetColumn(i)->UnsetAsSortKey();
+    // (no key at all) is expressed via UnsetAsSortKey(). Guard on
+    // IsSortKey(): the generic wx implementation asserts if a column
+    // that isn't currently a sort key is unset.
+    for (unsigned i = 0; i < ctrl->GetColumnCount(); i++) {
+        auto *col = ctrl->GetColumn(i);
+        if (col->IsSortKey()) col->UnsetAsSortKey();
+    }
     for (unsigned i = 0; i < ctrl->GetColumnCount(); i++) {
         auto *col = ctrl->GetColumn(i);
         if ((int)col->GetModelColumn() == model_col) {
